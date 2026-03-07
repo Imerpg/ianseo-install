@@ -1,0 +1,31 @@
+services:
+    web:
+        build: 
+            context: .
+            args:
+                - IANSEO_VERSION=${IANSEO_VERSION}
+        ports: 
+            - "${WEB_PORT}:80"
+        volumes:
+            - web_volume:/var/www/html/
+        depends_on:
+            - db
+        networks:
+            default:
+                aliases:
+                  - ianseo_docker_web
+    db:
+        image: mysql:lts
+        environment:
+            MYSQL_ROOT_PASSWORD: docker_db_root
+        volumes:
+            - db_volume:/var/lib/mysql
+            - ./db_init:/docker-entrypoint-initdb.d/
+        networks:
+            default:
+                aliases:
+                  - ianseo_docker_db
+
+volumes:
+    db_volume:
+    web_volume:
