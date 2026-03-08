@@ -17,7 +17,10 @@ services:
     db:
         image: mysql:lts
         environment:
-            MYSQL_ROOT_PASSWORD: docker_db_root
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
         volumes:
             - db_volume:/var/lib/mysql
             - ./db_init:/docker-entrypoint-initdb.d/
