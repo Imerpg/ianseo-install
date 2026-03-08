@@ -1,9 +1,10 @@
 #!/bin/bash
-# Arrête le script dès qu'une erreur survient
+
+# Stop script on any error
 set -e
 
-# Correction de la syntaxe de la variable
-IANSEO_ZIP=/tmp/${IANSEO_VERSION}.zip
+# Variables
+IANSEO_ZIP=/tmp/Ianseo_${IANSEO_VERSION}.zip
 INSTALL_DIR=/var/www/html/ianseo
 INDEX_PHP=$INSTALL_DIR/Install/index.php
 
@@ -26,23 +27,24 @@ extract_ianseo_zip()
 {
     echo -n "Extracting $IANSEO_ZIP file... "
     unzip -q $IANSEO_ZIP -d $INSTALL_DIR
-    # Suppression du zip après extraction pour alléger l'image
+    # Delete the zip file after extraction to save space, since we won't need it anymore
     rm -f $IANSEO_ZIP
     echo "done."
 }
 
 ianseo_tweaks()
 {
-    # Suppression du fichier de config pour forcer l'installation
+    # Delete the default config file to force ianseo to create a new one with the correct permissions on first run
     rm -f "$INSTALL_DIR/Common/config.inc.php"
 
-    # Configuration de l'hôte base de données Docker
+    # Configure the database host in index.php to point to the correct MySQL container
     if [ -f $INDEX_PHP ]; then
         echo "Tweaking ${INDEX_PHP}"
         sed -i.orig "s/W_HOST='localhost'/W_HOST='ianseo_docker_db'/" $INDEX_PHP
     fi
 
-    # Fix du bug UpdateDb (si présent)
+    # TODO: Add known MD5 checksums for the files we want to patch and only apply the patch if the checksum matches, to avoid breaking future versions of ianseo
+    # Fix a known typo in UpdateDb.inc.php if the file is present and matches the expected MD5 checksum
     UPDATE_DB_FILE=$INSTALL_DIR/Common/UpdateDb.inc.php
     if [ -f "$UPDATE_DB_FILE" ]; then
         UPDATE_DB_MD5SUM=$(md5sum "$UPDATE_DB_FILE" | awk '{ print $1 }')
@@ -63,9 +65,9 @@ set_permissions()
 download_ianseo()
 {
     if [ ! -f "$IANSEO_ZIP" ]; then
-        echo "Téléchargement de Ianseo depuis le site officiel..."
-        curl -L "https://ianseo.net/Release/${IANSEO_VERSION}.zip" -o "$IANSEO_ZIP"
-        echo "Téléchargement terminé."
+        echo "Downloading Ianseo from the official site..."
+        curl -L "https://ianseo.net/Release/Ianseo_${IANSEO_VERSION}.zip" -o "$IANSEO_ZIP"
+        echo "Download completed."
     fi
 }
 
