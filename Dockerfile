@@ -1,19 +1,14 @@
 FROM php:8.5-apache
 
-# Set IANSEO_VERSION as a build argument and environment variable
 ARG IANSEO_VERSION
 ENV IANSEO_VERSION=$IANSEO_VERSION
-# ---------------------------------------------------------------
 
-# Install dependencies and clean up apt cache to reduce image size
+# Dépendances système et client MySQL
 RUN apt-get update && apt-get install -y \
-    # Basic tools
     unzip \
     curl \
     dos2unix \
-    # client MySQL for command line
     default-mysql-client \
-    # lib php
     libicu-dev \
     libmagickwand-dev \
     libpng-dev \
@@ -24,32 +19,18 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
-# ------------------------------------------------------------------
 
-# Install extensions PHP (intl, gd, mysqli, pdo_mysql, zip, gettext)
+# Extensions PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    intl \
-    gd \
-    mysqli \
-    pdo_mysql \
-    zip \
-    gettext
-# ------------------------------------------------------------------
+    && docker-php-ext-install -j$(nproc) intl gd mysqli pdo_mysql zip gettext
 
-# Install Imagick (PECL)
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick
-# ----------------------
+RUN pecl install imagick && docker-php-ext-enable imagick
 
-# Drop in an assortment of configuration information and the ianseo files
+# Configuration Apache & Entrypoint
 COPY web/ianseo.conf /etc/apache2/conf-available/
-COPY web/php.ini /usr/local/etc/php/
-COPY web/phpinfo.php /tmp
-# -----------------------------------------------------------------------
+COPY web/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Prepare Ianseo files
-COPY web/web_prep.sh /tmp
-RUN chmod +x /tmp/web_prep.sh
-RUN /tmp/web_prep.sh
-# --------------------
+RUN dos2unix /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
+RUN a2enconf -q ianseo
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -1,11 +1,16 @@
 services:
     web:
-        build: 
+        build:
             context: .
             args:
                 - IANSEO_VERSION=${IANSEO_VERSION}
-        ports: 
+        ports:
             - "${WEB_PORT}:80"
+        environment:
+            - IANSEO_VERSION=${IANSEO_VERSION}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
         volumes:
             - web_volume:/var/www/html/
         depends_on:
@@ -13,7 +18,7 @@ services:
         networks:
             default:
                 aliases:
-                  - ianseo_docker_web
+                    - ianseo_docker_web
     db:
         image: mysql:lts
         environment:
@@ -27,7 +32,7 @@ services:
         networks:
             default:
                 aliases:
-                  - ianseo_docker_db
+                    - ianseo_docker_db
 
 volumes:
     db_volume:
